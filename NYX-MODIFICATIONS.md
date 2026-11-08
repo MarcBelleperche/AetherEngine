@@ -131,3 +131,18 @@ index d360237..d581645 100644
          let lanIP = try #require(HLSLocalServer.localActiveIPAddress())
          let server = HLSLocalServer(provider: StubProvider(), unauthenticatedHeadSeconds: 60)
 ```
+
+## Monter de version (rappel de Marc, 2026-11-07 : « les prochaines versions, il faudra re-pull »)
+
+La copie vendue ne suit plus l'amont toute seule : chaque nouvelle version d'AetherEngine se reprend à la main.
+
+1. Dans la copie publique (`MarcBelleperche/AetherEngine`) : récupérer le tag de l'amont, puis repartir de lui avec le
+   correctif : `git fetch upstream --tags`, `git switch -c nyx-<version> <version>`, `git cherry-pick <commit du correctif>`
+   (deux blocs `#if os(macOS)`, un test, ce fichier). Résoudre si l'amont a touché `HLSLocalServer.start()` ou
+   `airPlayPlaybackURL`, puis pousser la branche `nyx-<version>`.
+2. Ici : remplacer `Vendor/AetherEngine/` par cette branche (sans `.git`), relancer `outils/verifie.sh` : il refuse une copie
+   sans les deux `#if os(macOS)` et lance `NyxLoopbackOnMacTests`.
+3. Mettre à jour `adresseDesSourcesDuMoteur` (`Apps/Commun/Ecrans/Reglages/EcranAPropos.swift`) vers la nouvelle branche.
+
+📌 Pour ne plus avoir à le faire : proposer à l'amont une option d'écoute en boucle locale (ou le `#if os(macOS)` tel
+quel). Si l'auteur l'accepte, on revient au paquet distant et la copie vendue disparaît.
