@@ -1,3 +1,5 @@
+// Modifié par Nyx le 2026-11-07 (App Review 2.4.5, droit network.server du Mac) : start() lie l'écoute à 127.0.0.1 sur macOS (0.0.0.0 ailleurs, inchangé).
+// Copie de la 7.25.1 d'AetherEngine (LGPL-3 avec exception App Store) ; le détail : Vendor/AetherEngine/NYX-MODIFICATIONS.md.
 import Darwin
 import Foundation
 
@@ -560,7 +562,14 @@ final class HLSLocalServer: @unchecked Sendable {
         // onto a new server, but a readiness-gate swap (`airPlayHostSwapped`) and a held edge re-read after a
         // reload hand the LAN URL to the server already listening. LAN exposure is bounded instead by the
         // head deadlines and the loopback reserve in the accept loop.
+        #if os(macOS)
+        // Nyx (2026-11-07) : sur le Mac, l'écoute reste sur la boucle locale (App Review 2.4.5). L'AirPlay du Mac ne
+        // porte que le son (pas d'image confiée à un récepteur), et `airPlayPlaybackURL` ne réécrit plus l'adresse sur
+        // macOS : personne n'a à joindre ce serveur depuis le réseau. Voir Vendor/AetherEngine/NYX-MODIFICATIONS.md.
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+        #else
         addr.sin_addr.s_addr = inet_addr("0.0.0.0")
+        #endif
 
         let bindResult = withUnsafePointer(to: &addr) { ptr -> Int32 in
             ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sa in

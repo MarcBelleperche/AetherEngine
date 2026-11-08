@@ -1,3 +1,5 @@
+// Modifié par Nyx le 2026-11-07 (App Review 2.4.5, droit network.server du Mac) : le test des pairs du réseau est désactivé sur macOS.
+// Copie de la 7.25.1 d'AetherEngine (LGPL-3 avec exception App Store) ; le détail : Vendor/AetherEngine/NYX-MODIFICATIONS.md.
 import Foundation
 import Testing
 @testable import AetherEngine
@@ -59,8 +61,10 @@ struct HLSLocalServerSlowPeerTests {
                 "the second request on an authenticated keep-alive connection was not answered")
     }
 
+    // Nyx (2026-11-07) : sur le Mac, le serveur n'écoute que sur 127.0.0.1 ; aucun pair du réseau ne l'atteint, ce que
+    // `NyxLoopbackOnMacTests` vérifie à la place. Voir Vendor/AetherEngine/NYX-MODIFICATIONS.md.
     @Test("LAN peers cannot take the slots kept for loopback",
-          .enabled(if: HLSLocalServer.localActiveIPAddress() != nil))
+          .enabled(if: !nyxEcouteSurLaBoucleLocaleSeulement && HLSLocalServer.localActiveIPAddress() != nil))
     func lanPeersLeaveLoopbackSlots() async throws {
         let lanIP = try #require(HLSLocalServer.localActiveIPAddress())
         let server = HLSLocalServer(provider: StubProvider(), unauthenticatedHeadSeconds: 60)

@@ -1,3 +1,5 @@
+// Modifié par Nyx le 2026-11-07 (App Review 2.4.5, droit network.server du Mac) : airPlayPlaybackURL rend nil sur macOS : jamais d'adresse du réseau pour AirPlay.
+// Copie de la 7.25.1 d'AetherEngine (LGPL-3 avec exception App Store) ; le détail : Vendor/AetherEngine/NYX-MODIFICATIONS.md.
 import Foundation
 import Darwin.Mach
 import QuartzCore
@@ -6687,8 +6689,17 @@ public final class AetherEngine: ObservableObject {
     /// the reduced HDR master or plain media for HDR. See `AirPlayPlaylistDecision`.
     func airPlayPlaybackURL(base: URL,
                             playlist: AirPlayPlaylistDecision.ReceiverPlaylist = .media) -> URL? {
+        #if os(macOS)
+        // Nyx (2026-11-07) : sur le Mac, l'écoute reste sur la boucle locale (App Review 2.4.5), donc jamais d'adresse
+        // du réseau. La lecture externe est suivie sur macOS (`isExternalPlaybackActive`) et `airPlayActive` peut y
+        // passer à vrai ; sans ce garde-fou, la porte de démarrage (#35), le repli sur la playlist media et
+        // `handleRefusedAirPlayMaster` donneraient à AVPlayer une adresse que le serveur n'écoute plus. nil : chaque
+        // appelant garde son URL 127.0.0.1. Voir Vendor/AetherEngine/NYX-MODIFICATIONS.md.
+        return nil
+        #else
         guard let lanIP = HLSLocalServer.localActiveIPAddress() else { return nil }
         return AirPlayPlaylistDecision.receiverURL(base: base, lanIP: lanIP, playlist: playlist)
+        #endif
     }
 
     #if os(tvOS) || os(iOS)
